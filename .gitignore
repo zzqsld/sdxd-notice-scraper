@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.log
+scrape_log.txt
+err.txt
+debug_*.html
+temp_*.txt
+test_*.py
+test_*.txt
+资料.txt
+links.txt
+out.txt
+config.json
+# Keep history.json and output docx files as per requirement
+output/*.txt
+!output/*.docx
