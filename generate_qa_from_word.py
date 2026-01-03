@@ -8,7 +8,7 @@ from urllib3.util.retry import Retry
 
 # ================= 配置区域 =================
 # 请在此处填写您的 DeepSeek API Key
-API_KEY = "sk-314c7c55f086431399998fe7141228ff" 
+API_KEY = "YOUR_DEEPSEEK_API_KEY_HERE" 
 
 # DeepSeek API 地址 (通常兼容 OpenAI 格式)
 API_URL = "https://api.deepseek.com/chat/completions"
