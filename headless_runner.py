@@ -46,7 +46,21 @@ def run():
     for name, url in PRESETS.items():
         print(f"Processing: {name} ({url})")
         
-        url_history = history.get(url, set())
+        # Try to find history for this URL (handling potential fragments in keys)
+        url_history = history.get(url)
+        if url_history is None:
+            # Fallback: look for key starting with this URL
+            for k, v in history.items():
+                if k.startswith(url):
+                    url_history = v
+                    print(f"  Using history from key: {k}")
+                    break
+        
+        if url_history is None:
+            url_history = set()
+            print("  No history found, starting fresh.")
+        else:
+            print(f"  Loaded {len(url_history)} history items.")
         
         # Temporary file for this scrape (required by crawl_notices)
         temp_txt = os.path.join(OUTPUT_DIR, f"temp_{name}.txt")
