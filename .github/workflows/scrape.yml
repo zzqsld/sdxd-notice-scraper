@@ -7,6 +7,15 @@ on:
   schedule:
     - cron: '0 9 * * *' # 每天 UTC 9:00 (北京时间 17:00) 运行，可根据需要调整
   workflow_dispatch:
+    inputs:
+      crawl_mode:
+        description: 'Choose full crawl or incremental crawl'
+        required: true
+        default: 'incremental'
+        type: choice
+        options:
+          - incremental
+          - full
 
 jobs:
   scrape:
@@ -29,6 +38,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run scraper
+      env:
+        SCRAPE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.crawl_mode || 'incremental' }}
       run: python headless_runner.py
 
     - name: Commit and push changes

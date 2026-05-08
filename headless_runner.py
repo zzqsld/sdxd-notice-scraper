@@ -8,6 +8,8 @@ from datetime import datetime
 # Configuration
 HISTORY_FILE = "history.json"
 OUTPUT_DIR = "output"
+SCRAPE_MODE = os.environ.get("SCRAPE_MODE", "incremental").strip().lower()
+FULL_CRAWL = SCRAPE_MODE == "full"
 PRESETS = {
     "官网学校新闻": "https://www.sdxd.edu.cn/page/20190417140037rmry93pvdhwspazvhn.html",
     "官网通知公告": "https://www.sdxd.edu.cn/page/20190417141109v1ewezmjl1uf1hqy9h.html",
@@ -40,27 +42,36 @@ def run():
     print(f"Starting scrape job at {datetime.now()}")
     ensure_dir(OUTPUT_DIR)
     
-    history = load_history()
+    if FULL_CRAWL:
+        print("Running in full crawl mode.")
+        history = {}
+    else:
+        print("Running in incremental mode.")
+        history = load_history()
     has_updates = False
     
     for name, url in PRESETS.items():
         print(f"Processing: {name} ({url})")
         
-        # Try to find history for this URL (handling potential fragments in keys)
-        url_history = history.get(url)
-        if url_history is None:
-            # Fallback: look for key starting with this URL
-            for k, v in history.items():
-                if k.startswith(url):
-                    url_history = v
-                    print(f"  Using history from key: {k}")
-                    break
-        
-        if url_history is None:
+        if FULL_CRAWL:
             url_history = set()
-            print("  No history found, starting fresh.")
+            print("  Full crawl: history disabled for this run.")
         else:
-            print(f"  Loaded {len(url_history)} history items.")
+            # Try to find history for this URL (handling potential fragments in keys)
+            url_history = history.get(url)
+            if url_history is None:
+                # Fallback: look for key starting with this URL
+                for k, v in history.items():
+                    if k.startswith(url):
+                        url_history = v
+                        print(f"  Using history from key: {k}")
+                        break
+            
+            if url_history is None:
+                url_history = set()
+                print("  No history found, starting fresh.")
+            else:
+                print(f"  Loaded {len(url_history)} history items.")
         
         # Temporary file for this scrape (required by crawl_notices)
         temp_txt = os.path.join(OUTPUT_DIR, f"temp_{name}.txt")
@@ -88,7 +99,8 @@ def run():
                 
                 # Generate Word doc
                 date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                doc_name = f"{name}_{date_str}.docx"
+                mode_suffix = "full" if FULL_CRAWL else "incremental"
+                doc_name = f"{name}_{mode_suffix}_{date_str}.docx"
                 doc_path = os.path.join(OUTPUT_DIR, doc_name)
                 
                 print(f"Generating Word document: {doc_path}")
