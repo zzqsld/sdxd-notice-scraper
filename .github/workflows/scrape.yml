@@ -16,6 +16,14 @@ on:
         options:
           - incremental
           - full
+      download_images:
+        description: 'Whether to download and embed images in Word output'
+        required: true
+        default: 'yes'
+        type: choice
+        options:
+          - yes
+          - no
 
 jobs:
   scrape:
@@ -40,6 +48,7 @@ jobs:
     - name: Run scraper
       env:
         SCRAPE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.crawl_mode || 'incremental' }}
+        DOWNLOAD_IMAGES: ${{ github.event_name == 'workflow_dispatch' && inputs.download_images || 'yes' }}
       run: python headless_runner.py
 
     - name: Commit and push changes
