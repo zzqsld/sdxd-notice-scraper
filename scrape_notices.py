@@ -116,6 +116,13 @@ import http.cookiejar
 cookie_jar = http.cookiejar.CookieJar()
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
 
+def normalize_link(link: str) -> str:
+    if not link:
+        return ""
+    if link.startswith("//"):
+        return "https:" + link
+    return link
+
 def fetch(url: str, timeout: float, user_agent: str, data: dict = None, referer: str = None, extra_headers: dict = None) -> str:
     headers = {"User-Agent": user_agent}
     if referer:
@@ -244,6 +251,15 @@ def parse_url_info(url_str: str) -> tuple[str, str, str] | None:
     base_url = f"{parsed.scheme}://{parsed.netloc}/"
     return base_url, webpage_id, comp_id
 
+def parse_page_count(html: str) -> int | None:
+    match = re.search(r'data-pagecount="(\d+)"', html)
+    if match:
+        try:
+            return int(match.group(1))
+        except ValueError:
+            return None
+    return None
+
 def crawl_notices(source: str, output_file: str, is_file: bool = False, timeout: float = 30.0, start_page: int = 2, method: str = "POST", history: set = None) -> list[dict]:
     """
     抓取通知。
@@ -255,6 +271,9 @@ def crawl_notices(source: str, output_file: str, is_file: bool = False, timeout:
     all_notices = []
     new_items_count = 0
     seen_links = set()
+
+    if history:
+        history = {normalize_link(link) for link in history if link}
     
     # 如果传入了历史记录，将其加入 seen_links 以便去重，但我们需要区分"本次新抓取"和"历史已存在"
     # 策略：seen_links 用于本次抓取过程中的去重。
@@ -348,7 +367,8 @@ def crawl_notices(source: str, output_file: str, is_file: bool = False, timeout:
     # 检查第一页内容
     page1_new_items = 0
     for notice in notices:
-        link = notice.get("link", "")
+        link = normalize_link(notice.get("link", ""))
+        notice["link"] = link
         if link not in seen_links:
             seen_links.add(link)
             # 检查是否在历史记录中
@@ -376,7 +396,7 @@ def crawl_notices(source: str, output_file: str, is_file: bool = False, timeout:
             else:
                 current_page = start_page
                 
-            max_page = 70
+            max_page = parse_page_count(html) or 70
             consecutive_duplicates = 0
             
             while current_page <= max_page:
@@ -438,7 +458,8 @@ def crawl_notices(source: str, output_file: str, is_file: bool = False, timeout:
                 page_has_history_item = False
                 
                 for notice in current_notices:
-                    link = notice.get("link", "")
+                    link = normalize_link(notice.get("link", ""))
+                    notice["link"] = link
                     if link not in seen_links:
                         seen_links.add(link)
                         
@@ -496,9 +517,7 @@ def crawl_notices(source: str, output_file: str, is_file: bool = False, timeout:
             with open(output_file, "w", encoding="utf-8") as f:
                 for notice in all_notices:
                     # 格式化输出
-                    link = notice['link']
-                    if link.startswith('//'):
-                        link = link[2:]
+                    link = normalize_link(notice['link'])
 
                     f.write(f"标题: {notice['title']}\n")
                     f.write(f"{notice['date']}\n")

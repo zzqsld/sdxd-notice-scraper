@@ -1,5 +1,8 @@
 name: Scrape and Generate Word
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   schedule:
     - cron: '0 9 * * *' # 每天 UTC 9:00 (北京时间 17:00) 运行，可根据需要调整
