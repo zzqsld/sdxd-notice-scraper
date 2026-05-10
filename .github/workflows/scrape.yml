@@ -51,16 +51,38 @@ jobs:
         DOWNLOAD_IMAGES: ${{ github.event_name == 'workflow_dispatch' && inputs.download_images || 'yes' }}
       run: python headless_runner.py
 
+    - name: Keep only latest 3 output docs
+      run: |
+        set -e
+        if [ -d "output" ]; then
+          python - <<'PY'
+from pathlib import Path
+import re
+
+root = Path("output")
+pattern = re.compile(r"_(\d{8}_\d{6})\.docx$")
+groups = {}
+
+for path in root.glob("*.docx"):
+    match = pattern.search(path.name)
+    if not match:
+        continue
+    groups.setdefault(match.group(1), []).append(path)
+
+latest_groups = set(sorted(groups, reverse=True)[:3])
+for timestamp, paths in groups.items():
+    if timestamp not in latest_groups:
+        for path in paths:
+            path.unlink(missing_ok=True)
+PY
+        fi
+
     - name: Commit and push changes
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        # 添加 history.json 和 output 目录下的所有 docx 文件
-        git add history.json
-        # 如果 output 目录不存在，git add 会报错，所以先检查
-        if [ -d "output" ]; then
-          git add output/*.docx
-        fi
+        # 添加 history.json 和 output 目录下的所有变更（包含删除）
+        git add -A history.json output
         
         # 检查是否有暂存的更改
         if git diff --staged --quiet; then
