@@ -233,45 +233,14 @@ def add_markdown_content_to_doc(doc, markdown_text, progress_callback=None, curr
             if progress_callback and current_status:
                 idx, total, title = current_status
                 if download_images:
-                    progress_callback(idx, total, f"正在下载图片 ({current_image_idx}/{total_images}): {title}...")
+                    progress_callback(idx, total, f"正在写入图片链接 ({current_image_idx}/{total_images}): {title}...")
                 else:
-                    progress_callback(idx, total, f"正在处理图片链接 ({current_image_idx}/{total_images}): {title}...")
+                    progress_callback(idx, total, f"正在跳过图片 ({current_image_idx}/{total_images}): {title}...")
 
-            if not download_images:
-                # 仅保存链接
+            if download_images:
+                # 仅显示图片链接，不嵌入图片
                 p = doc.add_paragraph()
-                p.add_run(f"[图片: {alt}]").italic = True
-                p.add_run(f"({src})").italic = True
-            else:
-                # 下载并嵌入图片
-                try:
-                    # print(f"正在下载图片: {src}")
-                    headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                    }
-                    # 降低图片下载超时时间，使用 stream=True 以便检查大小
-                    # timeout=(connect, read)
-                    with requests.get(src, headers=headers, timeout=(3, 5), stream=True) as img_response:
-                        if img_response.status_code == 200:
-                            # 检查 Content-Length (限制 10MB)
-                            content_length = img_response.headers.get('content-length')
-                            if content_length and int(content_length) > 10 * 1024 * 1024:
-                                p = doc.add_paragraph()
-                                p.add_run(f"[图片过大 ({int(content_length)/1024/1024:.1f}MB)，已跳过]: {src}").italic = True
-                            else:
-                                # 读取内容
-                                image_content = img_response.content
-                                image_stream = io.BytesIO(image_content)
-                                # 插入图片，限制宽度，避免溢出
-                                doc.add_picture(image_stream, width=Inches(5.5))
-                        else:
-                            p = doc.add_paragraph()
-                            p.add_run(f"[图片下载失败 ({img_response.status_code}): {src}]").italic = True
-                except Exception as e:
-                    # 图片下载或插入失败时，保留链接
-                    p = doc.add_paragraph()
-                    p.add_run(f"[图片插入错误: {e}]").italic = True
-                    p.add_run(f" 链接: {src}")
+                p.add_run(f"图片链接: {src}").italic = True
             
             i += 3 # 跳过 alt 和 src
         else:

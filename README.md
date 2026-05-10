@@ -8,7 +8,7 @@
 *   **格式转换**: 将网页内容自动转换为 Word 文档 (.docx)，保留图片和基本格式。
 *   **增量更新**: 支持记录历史抓取记录，只抓取新发布的文章。
 *   **完整爬取**: 支持通过 GitHub Actions 手动触发全量抓取，重新生成完整版本文档。
-*   **图片开关**: 支持在 GitHub Actions 手动触发时选择是否下载并嵌入图片。
+*   **图片开关**: 支持在 GitHub Actions 手动触发时选择是否保留图片链接，或直接跳过图片。
 *   **GUI 界面**: 提供图形化界面 (`gui_main.py`)，方便本地操作和任务管理。
 *   **自动化运行**: 集成 GitHub Actions，每天定时自动运行爬虫并生成文档。
 
@@ -39,7 +39,7 @@
 **启用方法**:
 1.  Fork 或 Clone 本仓库。
 2.  在 GitHub 仓库的 "Actions" 标签页中启用 Workflow。
-3.  (可选) 手动触发 Workflow 进行测试，`crawl_mode` 选择 `full` 可运行全量抓取，选择 `incremental` 可运行增量抓取；`download_images` 选择 `yes` 或 `no` 控制是否嵌入图片。
+3.  (可选) 手动触发 Workflow 进行测试，`crawl_mode` 选择 `full` 可运行全量抓取，选择 `incremental` 可运行增量抓取；`download_images` 选择 `yes` 时只保留图片链接，选择 `no` 时不写入图片内容。
 
 ## 文件说明
 

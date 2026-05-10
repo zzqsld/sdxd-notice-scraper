@@ -18,6 +18,19 @@ PRESETS = {
     "官网学术信息": "https://www.sdxd.edu.cn/page/20250519093719belcb0u1xf6h94mj9y.html"
 }
 
+TITLE_TYPES = {
+    "官网学校新闻": "校园新闻",
+    "官网校园动态": "校园新闻",
+    "官网通知公告": "通知公告",
+    "官网学术信息": "学术信息",
+}
+
+def format_article_title(category_name: str, title: str, published_at: str) -> str:
+    news_type = TITLE_TYPES.get(category_name, "新闻")
+    safe_title = title.strip()
+    safe_time = published_at.strip() if published_at else "未知"
+    return f"【新闻】{safe_title} | 时间：{safe_time} | 类型：{news_type}"
+
 def load_history():
     if os.path.exists(HISTORY_FILE):
         try:
@@ -91,6 +104,9 @@ def run():
             if new_items:
                 print(f"Found {len(new_items)} new items for {name}")
                 has_updates = True
+
+                for item in new_items:
+                    item['title'] = format_article_title(name, item.get('title', ''), item.get('date', ''))
                 
                 # Update history
                 if url not in history:

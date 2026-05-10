@@ -17,7 +17,7 @@ on:
           - incremental
           - full
       download_images:
-        description: 'Whether to download and embed images in Word output'
+        description: 'Whether to keep image links in Word output'
         required: true
         default: 'yes'
         type: choice
